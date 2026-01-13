@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 export default function ProductNew() {
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
@@ -12,16 +12,31 @@ export default function ProductNew() {
       title: formData.get("title"),
       price: Number(formData.get("price")),
       categoryId: Number(formData.get("categoryId")),
-      image: formData.get("image"),
+      images: [formData.get("image")], // API expects array
       description: formData.get("description"),
     };
 
-    console.log("New product:", newProduct);
+    try {
+      const res = await fetch("https://api.escuelajs.co/api/v1/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newProduct),
+      });
 
-    // Later: POST to API
-    alert("Product submitted (mock)");
-
-    navigate("/products");
+      if (res.ok) {
+        alert("Successfully saved a new product");
+        navigate("/products");
+      } else {
+        const errorData = await res.json();
+        console.error("API error:", errorData);
+        alert("Save new product failed");
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Save new product failed");
+    }
   }
 
   return (
@@ -59,7 +74,7 @@ export default function ProductNew() {
           />
         </div>
 
-        {/* Category ID (1–5 only) */}
+        {/* Category ID */}
         <div>
           <label className="block text-sm font-medium">Category ID</label>
           <input
@@ -67,11 +82,11 @@ export default function ProductNew() {
             type="number"
             required
             min={1}
-            max={5}
+            max={10}
             className="mt-1 w-full rounded-lg border px-3 py-2"
-            placeholder="1 - 5"
+            placeholder="1 - 10"
           />
-          <p className="mt-1 text-xs text-slate-500">Allowed values: 1 to 5</p>
+          <p className="mt-1 text-xs text-slate-500">Allowed values: 1 to 10</p>
         </div>
 
         {/* Image URL */}
